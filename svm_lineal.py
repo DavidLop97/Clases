@@ -4,64 +4,31 @@ import io
 import json
 import base64
 
-st.subheader("📦 Zona de Exportación")
+# Zona de exportación
+if modo == "Zona de Exportación":
+    st.header("📦 Zona de Exportación")
+    st.markdown("Primero ejecuta Supervisado y No Supervisado para habilitar descargas.")
 
-st.write("Aquí puedes descargar datos, métricas o tu modelo entrenado.")
+    # Dataset
+    st.download_button("📄 Descargar Dataset (CSV)", df.to_csv(index=False).encode("utf-8"),
+                       file_name="dataset_iris.csv", mime="text/csv")
 
-# ---- 1. Exportar dataset ----
-df_csv = df.to_csv(index=False).encode("utf-8")
-st.download_button(
-    "📄 Descargar Dataset (CSV)",
-    df_csv,
-    file_name="dataset_iris.csv",
-    mime="text/csv"
-)
+    # Supervisado
+    sup = _export_store.get("supervised")
+    if sup:
+        st.download_button("📊 Métricas Supervisado", json.dumps(sup["metrics"], indent=4),
+                           file_name="metrics_supervised.json", mime="application/json")
+        st.download_button("📦 Modelo SVM", pickle.dumps(sup["model_obj"]),
+                           file_name="svm_model.pkl", mime="application/octet-stream")
+        for name, fig_bytes in sup["figs"].items():
+            st.download_button(f"🖼️ {name}", fig_bytes, file_name=f"{name}.png", mime="image/png")
 
-# ---- 2. Exportar métricas ----
-metrics_dict = {
-    "accuracy": accuracy,
-    "precision_macro": precision,
-    "recall_macro": recall,
-    "f1_macro": f1
-}
-
-metrics_json = json.dumps(metrics_dict, indent=4)
-st.download_button(
-    "📊 Descargar Métricas (JSON)",
-    metrics_json,
-    file_name="metricas_svm.json",
-    mime="application/json"
-)
-
-# ---- 3. Exportar modelo SVM ----
-model_bytes = pickle.dumps(model)
-st.download_button(
-    "🤖 Descargar Modelo SVM (PKL)",
-    model_bytes,
-    file_name="modelo_svm.pkl",
-    mime="application/octet-stream"
-)
-
-# ---- 4. Exportar gráfico Supervisado ----
-buffer = io.BytesIO()
-fig_svm.savefig(buffer, format="png")
-buffer.seek(0)
-
-st.download_button(
-    "📉 Descargar Gráfico SVM",
-    buffer,
-    file_name="grafico_svm.png",
-    mime="image/png"
-)
-
-# ---- 5. Exportar gráfico GMM ----
-buffer2 = io.BytesIO()
-fig_gmm.savefig(buffer2, format="png")
-buffer2.seek(0)
-
-st.download_button(
-    "📈 Descargar Gráfico GMM",
-    buffer2,
-    file_name="grafico_gmm.png",
-    mime="image/png"
-)
+    # No Supervisado
+    uns = _export_store.get("unsupervised")
+    if uns:
+        st.download_button("📊 Métricas No Supervisado", json.dumps(uns["metrics"], indent=4),
+                           file_name="metrics_unsupervised.json", mime="application/json")
+        st.download_button("📦 Modelo GMM", pickle.dumps(uns["model_obj"]),
+                           file_name="gmm_model.pkl", mime="application/octet-stream")
+        for name, fig_bytes in uns["figs"].items():
+            st.download_button(f"🖼️ {name}", fig_bytes, file_name=f"{name}.png", mime="image/png")
