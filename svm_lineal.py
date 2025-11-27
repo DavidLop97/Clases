@@ -1,64 +1,67 @@
-import streamlit as st
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.mixture import GaussianMixture
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import pickle
+import io
+import json
+import base64
 
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-df = pd.DataFrame(X, columns=iris.feature_names)
-df["target"] = y
+st.subheader("📦 Zona de Exportación")
 
-st.title("Tarea: Supervisado (SVM lineal) + No Supervisado (GMM)")
-st.subheader("Vista previa del dataset")
-st.dataframe(df)
+st.write("Aquí puedes descargar datos, métricas o tu modelo entrenado.")
 
-st.header("🔵 Modo Supervisado — SVM (Kernel Lineal)")
+# ---- 1. Exportar dataset ----
+df_csv = df.to_csv(index=False).encode("utf-8")
+st.download_button(
+    "📄 Descargar Dataset (CSV)",
+    df_csv,
+    file_name="dataset_iris.csv",
+    mime="text/csv"
+)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# ---- 2. Exportar métricas ----
+metrics_dict = {
+    "accuracy": accuracy,
+    "precision_macro": precision,
+    "recall_macro": recall,
+    "f1_macro": f1
+}
 
-svm = SVC(kernel="linear")
-svm.fit(X_train, y_train)
+metrics_json = json.dumps(metrics_dict, indent=4)
+st.download_button(
+    "📊 Descargar Métricas (JSON)",
+    metrics_json,
+    file_name="metricas_svm.json",
+    mime="application/json"
+)
 
-y_pred = svm.predict(X_test)
+# ---- 3. Exportar modelo SVM ----
+model_bytes = pickle.dumps(model)
+st.download_button(
+    "🤖 Descargar Modelo SVM (PKL)",
+    model_bytes,
+    file_name="modelo_svm.pkl",
+    mime="application/octet-stream"
+)
 
-st.markdown("### Métricas (conjunto test)")
-st.write("**Accuracy:**", accuracy_score(y_test, y_pred))
-st.write("**Precision (macro):**", precision_score(y_test, y_pred, average="macro"))
-st.write("**Recall (macro):**", recall_score(y_test, y_pred, average="macro"))
-st.write("**F1-score (macro):**", f1_score(y_test, y_pred, average="macro"))
+# ---- 4. Exportar gráfico Supervisado ----
+buffer = io.BytesIO()
+fig_svm.savefig(buffer, format="png")
+buffer.seek(0)
 
-st.subheader("📊 Gráfico Supervisado (SVM)")
-fig1, ax1 = plt.subplots()
-ax1.scatter(X[:, 0], X[:, 1], c=y, cmap="viridis", edgecolor="k")
-ax1.set_xlabel("Sepal Length")
-ax1.set_ylabel("Sepal Width")
-ax1.set_title("Clasificación SVM - Proyección 2D")
-st.pyplot(fig1)
+st.download_button(
+    "📉 Descargar Gráfico SVM",
+    buffer,
+    file_name="grafico_svm.png",
+    mime="image/png"
+)
 
-st.subheader("Probar una predicción manualmente")
-sl = st.slider("Sepal length", 4.3, 7.9, 5.1)
-sw = st.slider("Sepal width", 2.0, 4.4, 3.5)
-pl = st.slider("Petal length", 1.0, 6.9, 1.4)
-pw = st.slider("Petal width", 0.1, 2.5, 0.2)
+# ---- 5. Exportar gráfico GMM ----
+buffer2 = io.BytesIO()
+fig_gmm.savefig(buffer2, format="png")
+buffer2.seek(0)
 
-pred = svm.predict([[sl, sw, pl, pw]])[0]
-st.write("Predicción:", pred, "-", iris.target_names[pred])
-
-st.header("🔴 Modo No Supervisado — Gaussian Mixture Model")
-
-gmm = GaussianMixture(n_components=3, random_state=42)
-clusters = gmm.fit_predict(X)
-
-st.subheader("📊 Gráfico No Supervisado (GMM)")
-fig2, ax2 = plt.subplots()
-ax2.scatter(X[:, 0], X[:, 1], c=clusters, cmap="rainbow", edgecolor="k")
-ax2.set_xlabel("Sepal Length")
-ax2.set_ylabel("Sepal Width")
-ax2.set_title("Clusters GMM - Proyección 2D")
-st.pyplot(fig2)
+st.download_button(
+    "📈 Descargar Gráfico GMM",
+    buffer2,
+    file_name="grafico_gmm.png",
+    mime="image/png"
+)
