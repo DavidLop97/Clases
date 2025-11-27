@@ -1,6 +1,8 @@
-streamlit==1.36.0
-pandas==2.1.1
-numpy==1.26.0
-matplotlib==3.8.0
-scikit-learn==1.3.2
-pickle-mixin==1.0.2
+streamlit==1.40.1
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+pickle5
+jsonschema
